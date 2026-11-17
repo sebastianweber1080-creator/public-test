@@ -7,6 +7,7 @@ live aus der Markttransparenzstelle für Kraftstoffe (MTS-K) über die kostenlos
 - Standort per GPS oder Suche nach Ort/PLZ (OpenStreetMap/Nominatim)
 - Umkreis 2–25 km, Sortierung nach Preis oder Entfernung, Filter „nur geöffnet“
 - Farbliche Markierung günstig / mittel / teuer, alle drei Sorten pro Tankstelle
+- **Lieblingstankstellen** ★ mit eigenem Reiter und Live-Preisen, egal wo du bist
 - **Preisalarm** 🔔: Grenze pro Sorte festlegen, Benachrichtigung + Hinweis in der App, sobald eine geöffnete Tankstelle im Umkreis sie erreicht (erneut nur, wenn es noch günstiger wird)
 - Automatische Aktualisierung (alle 5 oder 10 Minuten) und beim Zurückkehren in die App
 - **Kartenansicht** (OpenStreetMap): Preis-Pins in Ampelfarben, Suchradius, Popup mit allen Preisen und Route
@@ -34,3 +35,8 @@ Für GPS auf dem Handy muss die Seite über **HTTPS** laufen – am einfachsten 
 Der Alarm wird bei jeder Aktualisierung geprüft – solange die App offen ist oder im Hintergrund läuft.
 Ist sie komplett geschlossen (oder hat das Handy sie im Hintergrund schlafen gelegt), kann sie nicht prüfen.
 Für echte Push-Benachrichtigungen bei geschlossener App wäre ein kleiner Server nötig, der die Preise abfragt.
+
+### Lieblingstankstellen
+Mit ☆ in der Liste oder im Karten-Popup speicherst du eine Tankstelle als Favorit (lokal im Browser).
+Der Reiter **★ Favoriten** zeigt ihre Live-Preise – auch wenn du gerade woanders bist. Der Preisalarm lässt sich
+auf Favoriten beschränken.

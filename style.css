@@ -94,3 +94,13 @@ dialog label.check { display: flex; gap: 8px; align-items: center; font-weight: 
   .alarm-banner { background: #422006; color: #fde68a; border-color: #854d0e; }
   .badge.alarm { background: #422006; color: #fde68a; }
 }
+
+/* ---------- Lieblingstankstellen ---------- */
+.view-toggle { grid-template-columns: repeat(3, 1fr); }
+.star { background: none; border: 0; padding: 0 6px 0 0; font-size: 1.25rem; line-height: 1; color: var(--muted);
+  vertical-align: -2px; cursor: pointer; }
+.star.on { color: #eab308; }
+.controls.fav-mode label:has(#radius), .controls.fav-mode label.check:has(#openOnly) { opacity: .4; pointer-events: none; }
+.pin.fav::before { content: "★ "; color: #fde047; }
+dialog label.check.sub { font-weight: 400; font-size: .9rem; flex-wrap: wrap; }
+dialog label.check.sub small { color: var(--muted); }

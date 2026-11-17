@@ -62,6 +62,7 @@
     <div class="seg view-toggle" role="tablist" aria-label="Ansicht">
       <button data-view="list" class="active">☰ Liste</button>
       <button data-view="map">🗺️ Karte</button>
+      <button data-view="fav">★ Favoriten</button>
     </div>
     <ol id="list" class="list"></ol>
     <div id="map" class="map" hidden></div>
@@ -102,6 +103,8 @@
       <p class="hint">Du wirst benachrichtigt, sobald eine <b>geöffnete</b> Tankstelle im eingestellten Umkreis
         die Grenze erreicht oder unterschreitet. Leeres Feld = kein Alarm für diese Sorte.</p>
       <label class="check"><input type="checkbox" id="alarmEnabled"> Preisalarm aktiv</label>
+      <label class="check sub"><input type="checkbox" id="alarmFavOnly"> nur für meine Lieblingstankstellen ★
+        <small>(egal wo ich gerade bin)</small></label>
       <div class="alarm-grid">
         <label>Super E5 bis <span class="eur"><input id="alarm-e5" type="number" inputmode="decimal" step="0.01" min="0.5" max="4" placeholder="z. B. 1,75"> €</span></label>
         <label>Super E10 bis <span class="eur"><input id="alarm-e10" type="number" inputmode="decimal" step="0.01" min="0.5" max="4" placeholder="z. B. 1,69"> €</span></label>

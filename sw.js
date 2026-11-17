@@ -1,5 +1,5 @@
 // Offline-Shell: statische Dateien cachen, API-Aufrufe immer live.
-const CACHE = 'spritpreise-v3';
+const CACHE = 'spritpreise-v4';
 const ASSETS = ['./', 'index.html', 'style.css', 'app.js', 'manifest.json', 'icons/icon.svg',
   'vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css', 'vendor/leaflet/images/marker-icon.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS))));
