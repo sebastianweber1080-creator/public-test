@@ -14,7 +14,10 @@
 <body>
   <header class="topbar">
     <h1>⛽ Spritpreise</h1>
-    <button id="settingsBtn" class="icon-btn" aria-label="Einstellungen">⚙️</button>
+    <div>
+      <button id="alarmBtn" class="icon-btn" aria-label="Preisalarm">🔔</button>
+      <button id="settingsBtn" class="icon-btn" aria-label="Einstellungen">⚙️</button>
+    </div>
   </header>
 
   <main>
@@ -52,6 +55,10 @@
     </section>
 
     <div id="status" class="status" role="status" aria-live="polite"></div>
+    <div id="alarmBanner" class="alarm-banner" role="alert" hidden>
+      <span id="alarmText"></span>
+      <button type="button" id="alarmClose" aria-label="Schließen">✕</button>
+    </div>
     <div class="seg view-toggle" role="tablist" aria-label="Ansicht">
       <button data-view="list" class="active">☰ Liste</button>
       <button data-view="map">🗺️ Karte</button>
@@ -85,6 +92,27 @@
       <menu>
         <button value="cancel">Abbrechen</button>
         <button value="save" id="saveSettings" class="primary">Speichern</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <dialog id="alarm">
+    <form method="dialog">
+      <h2>🔔 Preisalarm</h2>
+      <p class="hint">Du wirst benachrichtigt, sobald eine <b>geöffnete</b> Tankstelle im eingestellten Umkreis
+        die Grenze erreicht oder unterschreitet. Leeres Feld = kein Alarm für diese Sorte.</p>
+      <label class="check"><input type="checkbox" id="alarmEnabled"> Preisalarm aktiv</label>
+      <div class="alarm-grid">
+        <label>Super E5 bis <span class="eur"><input id="alarm-e5" type="number" inputmode="decimal" step="0.01" min="0.5" max="4" placeholder="z. B. 1,75"> €</span></label>
+        <label>Super E10 bis <span class="eur"><input id="alarm-e10" type="number" inputmode="decimal" step="0.01" min="0.5" max="4" placeholder="z. B. 1,69"> €</span></label>
+        <label>Diesel bis <span class="eur"><input id="alarm-diesel" type="number" inputmode="decimal" step="0.01" min="0.5" max="4" placeholder="z. B. 1,59"> €</span></label>
+      </div>
+      <p class="hint" id="notifHint"></p>
+      <p class="hint">Geprüft wird bei jeder Aktualisierung (Standard: alle 5 Minuten), solange die App geöffnet ist
+        oder im Hintergrund läuft. Ist die App ganz geschlossen, kann sie nicht prüfen.</p>
+      <menu>
+        <button value="cancel">Abbrechen</button>
+        <button value="save" class="primary">Speichern</button>
       </menu>
     </form>
   </dialog>

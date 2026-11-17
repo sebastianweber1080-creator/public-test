@@ -18,6 +18,8 @@ const state = {
   apiKey: store.get('apiKey', ''),
   refresh: store.get('refresh', 5),
   view: store.get('view', 'list'), // 'list' | 'map'
+  alarm: store.get('alarm', { enabled: false, e5: null, e10: null, diesel: null }),
+  alarmSeen: store.get('alarmSeen', {}), // Sorte -> zuletzt gemeldeter Bestpreis (verhindert Mehrfach-Alarme)
   pos: null,          // { lat, lng, label }
   stations: [],
   updated: null,
@@ -58,6 +60,10 @@ function initUI() {
   $('#searchForm').addEventListener('submit', e => { e.preventDefault(); searchPlace($('#place').value.trim()); });
 
   $('#settingsBtn').addEventListener('click', openSettings);
+  $('#alarmBtn').addEventListener('click', openAlarm);
+  $('#alarmClose').addEventListener('click', () => { $('#alarmBanner').hidden = true; });
+  $('#alarm').addEventListener('close', saveAlarm);
+  updateAlarmBtn();
   $('#settings').addEventListener('close', () => {
     if ($('#settings').returnValue !== 'save') return;
     state.apiKey = $('#apiKey').value.trim(); store.set('apiKey', state.apiKey);
@@ -89,7 +95,7 @@ function locate() {
   if (!navigator.geolocation) { setStatus('Dein Browser unterstützt keine Standortbestimmung. Bitte Ort/PLZ eingeben.', true); return; }
   setStatus('Standort wird ermittelt …');
   navigator.geolocation.getCurrentPosition(
-    p => { state.pos = { lat: p.coords.latitude, lng: p.coords.longitude, label: 'deinen Standort' }; load(); },
+    p => { setPos({ lat: p.coords.latitude, lng: p.coords.longitude, label: 'deinen Standort' }); load(); },
     err => setStatus(err.code === 1
       ? 'Standortzugriff verweigert. Gib stattdessen einen Ort oder eine PLZ ein.'
       : 'Standort konnte nicht ermittelt werden. Bitte Ort/PLZ eingeben.', true),
@@ -105,7 +111,7 @@ async function searchPlace(q) {
     const res = await fetch(url, { headers: { 'Accept-Language': 'de' } });
     const data = await res.json();
     if (!data.length) { setStatus(`„${q}“ wurde nicht gefunden.`, true); return; }
-    state.pos = { lat: +data[0].lat, lng: +data[0].lon, label: data[0].display_name.split(',').slice(0, 2).join(',') };
+    setPos({ lat: +data[0].lat, lng: +data[0].lon, label: data[0].display_name.split(',').slice(0, 2).join(',') });
     load();
   } catch {
     setStatus('Ortssuche fehlgeschlagen. Bitte Internetverbindung prüfen.', true);
@@ -127,6 +133,7 @@ async function load() {
     state.stations = data.stations || [];
     state.updated = Date.now();
     render();
+    checkAlarm();
     scheduleRefresh();
   } catch (e) {
     setStatus(`Fehler beim Laden: ${e.message}`, true);
@@ -136,7 +143,8 @@ async function load() {
 function scheduleRefresh() {
   clearInterval(state.timer);
   // Tankerkönig bittet darum, nicht öfter als alle 5 Minuten automatisch abzufragen
-  if (state.refresh > 0) state.timer = setInterval(() => { if (!document.hidden) load(); }, state.refresh * 60000);
+  // Mit aktivem Preisalarm wird auch im Hintergrund weiter geprüft
+  if (state.refresh > 0) state.timer = setInterval(() => { if (!document.hidden || alarmActive()) load(); }, state.refresh * 60000);
 }
 
 // ---------- Darstellung ----------
@@ -182,7 +190,7 @@ function render() {
       .map(k => `<span>${FUELS[k]}: ${s[k] > 0 ? s[k].toFixed(3).replace('.', ',') + ' €' : '–'}</span>`).join('');
     const dest = `${s.lat},${s.lng}`;
     return `<li class="station ${s.isOpen ? '' : 'closed'}">
-      <div class="name">${esc(s.brand || s.name)}<span class="badge ${s.isOpen ? 'open' : ''}">${s.isOpen ? 'geöffnet' : 'geschlossen'}</span></div>
+      <div class="name">${esc(s.brand || s.name)}<span class="badge ${s.isOpen ? 'open' : ''}">${s.isOpen ? 'geöffnet' : 'geschlossen'}</span>${belowLimit(s, f) ? '<span class="badge alarm">🔔 unter Grenze</span>' : ''}</div>
       <div class="price ${p ? tier(s[f]) : 'na'}">${p ? p + ' €' : 'kein Preis'}</div>
       <div class="addr">${[title(s.street), esc(s.houseNumber || "")].join(" ").trim()}, ${esc(s.postCode || '')} ${title(s.place)} · ${s.dist.toFixed(1).replace('.', ',')} km</div>
       <div class="others">${others}</div>
@@ -195,6 +203,94 @@ function render() {
 
   state.lastRender = { list, tier, f };
   if (state.view === 'map') renderMap();
+}
+
+// ---------- Preisalarm ----------
+function setPos(pos) {
+  const moved = !state.pos || Math.abs(state.pos.lat - pos.lat) > 0.01 || Math.abs(state.pos.lng - pos.lng) > 0.01;
+  state.pos = pos;
+  if (moved) { state.alarmSeen = {}; store.set('alarmSeen', {}); }
+}
+
+const alarmLimits = () => Object.keys(FUELS).filter(k => state.alarm[k] > 0);
+const alarmActive = () => state.alarm.enabled && alarmLimits().length > 0;
+const belowLimit = (s, f) => alarmActive() && state.alarm[f] > 0 && s.isOpen && s[f] > 0 && s[f] <= state.alarm[f];
+const euro = p => p.toFixed(3).replace('.', ',') + ' €';
+
+function updateAlarmBtn() {
+  $('#alarmBtn').classList.toggle('on', alarmActive());
+  $('#alarmBtn').title = alarmActive()
+    ? 'Preisalarm: ' + alarmLimits().map(k => `${FUELS[k]} ≤ ${state.alarm[k].toFixed(2).replace('.', ',')} €`).join(', ')
+    : 'Preisalarm (aus)';
+}
+
+function notifText() {
+  if (!('Notification' in window)) return 'Dein Browser unterstützt keine Benachrichtigungen – der Alarm erscheint dann nur in der App.';
+  if (Notification.permission === 'denied') return '⚠️ Benachrichtigungen sind blockiert. Erlaube sie in den Browser-Einstellungen, sonst erscheint der Alarm nur in der App.';
+  if (Notification.permission === 'default') return 'Beim Speichern fragt der Browser, ob die App dir Benachrichtigungen schicken darf.';
+  return '✅ Benachrichtigungen sind erlaubt.';
+}
+
+function openAlarm() {
+  $('#alarmEnabled').checked = state.alarm.enabled;
+  for (const k of Object.keys(FUELS)) $('#alarm-' + k).value = state.alarm[k] > 0 ? state.alarm[k] : '';
+  // Vorschlag: aktuelle Sorte mit dem derzeit günstigsten Preis vorbelegen
+  const f = state.fuel, cur = state.stations.filter(s => s.isOpen && s[f] > 0).map(s => s[f]);
+  if (!state.alarm[f] && cur.length) $('#alarm-' + f).placeholder = 'ab ' + Math.min(...cur).toFixed(3).replace('.', ',');
+  $('#notifHint').textContent = notifText();
+  $('#alarm').showModal();
+}
+
+async function saveAlarm() {
+  if ($('#alarm').returnValue !== 'save') return;
+  const a = { enabled: $('#alarmEnabled').checked };
+  for (const k of Object.keys(FUELS)) {
+    const v = parseFloat(String($('#alarm-' + k).value).replace(',', '.'));
+    a[k] = v > 0 ? Math.round(v * 1000) / 1000 : null;
+  }
+  // Wer eine Grenze einträgt, will den Alarm in der Regel auch aktiv haben
+  if (!state.alarm.enabled && !a.enabled && Object.keys(FUELS).some(k => a[k] && a[k] !== state.alarm[k])) a.enabled = true;
+  state.alarm = a; store.set('alarm', a);
+  state.alarmSeen = {}; store.set('alarmSeen', {});
+  updateAlarmBtn();
+  if (alarmActive() && 'Notification' in window && Notification.permission === 'default') {
+    try { await Notification.requestPermission(); } catch {}
+  }
+  render();
+  checkAlarm();
+}
+
+function checkAlarm() {
+  if (!alarmActive() || !state.updated) return;
+  const hits = [];
+  for (const k of alarmLimits()) {
+    const ok = state.stations.filter(s => s.isOpen && s[k] > 0 && s[k] <= state.alarm[k]).sort((a, b) => a[k] - b[k]);
+    if (!ok.length) { delete state.alarmSeen[k]; continue; }
+    const best = ok[0];
+    // Nur melden, wenn neu unter der Grenze oder noch günstiger als beim letzten Alarm
+    if (!(state.alarmSeen[k] <= best[k])) hits.push({ k, best, count: ok.length });
+    state.alarmSeen[k] = best[k];
+  }
+  store.set('alarmSeen', state.alarmSeen);
+  if (!hits.length) return;
+
+  const lines = hits.map(({ k, best, count }) =>
+    `${FUELS[k]} ${euro(best[k])} bei ${best.brand || best.name}, ${title(best.place)} (${best.dist.toFixed(1).replace('.', ',')} km)` +
+    (count > 1 ? ` – ${count} Tankstellen unter ${state.alarm[k].toFixed(2).replace('.', ',')} €` : ''));
+  $('#alarmText').innerHTML = '🔔 <b>Preisalarm!</b> ' + lines.map(esc).join('<br>');
+  $('#alarmBanner').hidden = false;
+  notify('⛽ Preisalarm', lines.join('\n'), hits[0].best.id);
+}
+
+async function notify(title, body, tag) {
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const opts = { body, tag: 'preisalarm', renotify: true, icon: 'icons/icon.svg', badge: 'icons/icon.svg', data: { id: tag } };
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    if (reg) { await reg.showNotification(title, opts); return; }
+  } catch {}
+  try { new Notification(title, opts); } catch {}
 }
 
 // ---------- Kartenansicht ----------
