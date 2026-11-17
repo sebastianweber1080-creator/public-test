@@ -8,7 +8,8 @@ live aus der Markttransparenzstelle für Kraftstoffe (MTS-K) über die kostenlos
 - Umkreis 2–25 km, Sortierung nach Preis oder Entfernung, Filter „nur geöffnet“
 - Farbliche Markierung günstig / mittel / teuer, alle drei Sorten pro Tankstelle
 - Automatische Aktualisierung (alle 5 oder 10 Minuten) und beim Zurückkehren in die App
-- Route (Google Maps) und Karte (OpenStreetMap) pro Tankstelle
+- **Kartenansicht** (OpenStreetMap): Preis-Pins in Ampelfarben, Suchradius, Popup mit allen Preisen und Route
+- „Auf Karte zeigen“ aus der Liste, Route-Link (Google Maps) pro Tankstelle
 - Installierbar auf dem Handy („Zum Startbildschirm hinzufügen“), Hell-/Dunkelmodus
 
 ## Einrichtung
@@ -26,4 +27,4 @@ Für GPS auf dem Handy muss die Seite über **HTTPS** laufen – am einfachsten 
 ## Hinweise
 - Die MTS-K-Daten gelten für Deutschland. Preise werden von den Tankstellen innerhalb weniger Minuten gemeldet.
 - Tankerkönig bittet, nicht öfter als alle 5 Minuten automatisch abzufragen – das ist in der App so voreingestellt.
-- Daten: Tankerkönig / MTS-K, Lizenz CC BY 4.0.
+- Daten: Tankerkönig / MTS-K, Lizenz CC BY 4.0. Karte: © OpenStreetMap-Mitwirkende, [Leaflet](https://leafletjs.com) (BSD-2, in `vendor/` enthalten).

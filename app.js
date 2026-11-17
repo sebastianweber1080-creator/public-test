@@ -17,22 +17,36 @@ const state = {
   openOnly: store.get('openOnly', true),
   apiKey: store.get('apiKey', ''),
   refresh: store.get('refresh', 5),
+  view: store.get('view', 'list'), // 'list' | 'map'
   pos: null,          // { lat, lng, label }
   stations: [],
   updated: null,
   timer: null,
+  map: null,         // Leaflet-Karte (wird erst beim ersten Öffnen erzeugt)
+  mapLayer: null,
+  mapFitKey: '',
+  markers: {},
 };
 
 // ---------- UI-Initialisierung ----------
 function initUI() {
-  document.querySelectorAll('.seg button').forEach(b => {
+  document.querySelectorAll('[data-fuel]').forEach(b => {
     b.classList.toggle('active', b.dataset.fuel === state.fuel);
     b.addEventListener('click', () => {
       state.fuel = b.dataset.fuel; store.set('fuel', state.fuel);
-      document.querySelectorAll('.seg button').forEach(x => x.classList.toggle('active', x === b));
+      document.querySelectorAll('[data-fuel]').forEach(x => x.classList.toggle('active', x === b));
       render();
     });
   });
+  document.querySelectorAll('.view-toggle button').forEach(b =>
+    b.addEventListener('click', () => setView(b.dataset.view)));
+  setView(state.view);
+
+  $('#list').addEventListener('click', e => {
+    const btn = e.target.closest('[data-show]');
+    if (btn) showOnMap(btn.dataset.show);
+  });
+
   $('#radius').value = String(state.radius);
   $('#sort').value = state.sort;
   $('#openOnly').checked = state.openOnly;
@@ -174,10 +188,88 @@ function render() {
       <div class="others">${others}</div>
       <div class="actions">
         <a href="https://www.google.com/maps/dir/?api=1&destination=${dest}" target="_blank" rel="noopener">🧭 Route</a>
-        <a href="https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lng}#map=17/${dest.replace(',', '/')}" target="_blank" rel="noopener">🗺️ Karte</a>
+        <button type="button" class="link" data-show="${esc(s.id)}">🗺️ Auf Karte zeigen</button>
       </div>
     </li>`;
   }).join('');
+
+  state.lastRender = { list, tier, f };
+  if (state.view === 'map') renderMap();
+}
+
+// ---------- Kartenansicht ----------
+function setView(view) {
+  state.view = view; store.set('view', view);
+  document.querySelectorAll('.view-toggle button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  $('#list').hidden = view !== 'list';
+  $('#map').hidden = view !== 'map';
+  if (view === 'map') renderMap();
+}
+
+function ensureMap() {
+  if (state.map) return state.map;
+  if (typeof L === 'undefined') { setStatus('Karte konnte nicht geladen werden.', true); return null; }
+  const map = L.map('map', { zoomControl: true });
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
+  }).addTo(map);
+  map.setView([51.16, 10.45], 6); // Deutschland, bis ein Standort da ist
+  state.mapLayer = L.layerGroup().addTo(map);
+  state.map = map;
+  return map;
+}
+
+function popupHtml(s, f, tier) {
+  const prices = Object.keys(FUELS).map(k =>
+    `<tr class="${k === f ? 'sel' : ''}"><td>${FUELS[k]}</td><td>${s[k] > 0 ? s[k].toFixed(3).replace('.', ',') + ' €' : '–'}</td></tr>`).join('');
+  return `<div class="popup">
+    <strong>${esc(s.brand || s.name)}</strong> <span class="badge ${s.isOpen ? 'open' : ''}">${s.isOpen ? 'geöffnet' : 'geschlossen'}</span><br>
+    <small>${[title(s.street), esc(s.houseNumber || '')].join(' ').trim()}, ${esc(s.postCode || '')} ${title(s.place)} · ${s.dist.toFixed(1).replace('.', ',')} km</small>
+    <table>${prices}</table>
+    <a href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}" target="_blank" rel="noopener">🧭 Route</a>
+  </div>`;
+}
+
+function renderMap() {
+  const map = ensureMap();
+  if (!map) return;
+  // Container war evtl. versteckt → Größe neu berechnen
+  requestAnimationFrame(() => map.invalidateSize());
+  state.mapLayer.clearLayers();
+  state.markers = {};
+  if (!state.pos) return;
+
+  const { lat, lng } = state.pos;
+  const circle = L.circle([lat, lng], { radius: state.radius * 1000, color: '#0f766e', weight: 1, fillOpacity: 0.04 }).addTo(state.mapLayer);
+  L.circleMarker([lat, lng], { radius: 7, color: '#fff', weight: 2, fillColor: '#2563eb', fillOpacity: 1 })
+    .bindTooltip('Suchmittelpunkt').addTo(state.mapLayer);
+
+  const { list = [], tier, f } = state.lastRender || {};
+  // Teuerste zuerst einfügen, damit günstige Preise oben liegen
+  [...list].reverse().forEach(s => {
+    const p = s[f] > 0 ? s[f] : null;
+    const cls = !s.isOpen ? 'closed' : p ? tier(p) : 'na';
+    const label = p ? `${p.toFixed(3).slice(0, -1).replace('.', ',')}<sup>${p.toFixed(3).slice(-1)}</sup>` : '–';
+    const icon = L.divIcon({ className: '', html: `<div class="pin ${cls}">${label}</div>`, iconSize: null, iconAnchor: [0, 0] });
+    const m = L.marker([s.lat, s.lng], { icon, title: s.brand || s.name, riseOnHover: true })
+      .bindPopup(popupHtml(s, f, tier), { offset: [0, -30] }).addTo(state.mapLayer);
+    state.markers[s.id] = m;
+  });
+
+  // Nur bei neuem Standort/Umkreis neu zoomen, sonst bleibt der Kartenausschnitt beim Aktualisieren erhalten
+  const key = `${lat},${lng},${state.radius}`;
+  if (key !== state.mapFitKey) {
+    state.mapFitKey = key;
+    requestAnimationFrame(() => map.fitBounds(circle.getBounds(), { padding: [10, 10] }));
+  }
+}
+
+function showOnMap(id) {
+  setView('map');
+  const m = state.markers[id];
+  if (!m) return;
+  requestAnimationFrame(() => { state.map.setView(m.getLatLng(), Math.max(state.map.getZoom(), 15)); m.openPopup(); });
 }
 
 // ---------- Start ----------

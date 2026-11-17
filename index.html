@@ -8,6 +8,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -51,7 +52,12 @@
     </section>
 
     <div id="status" class="status" role="status" aria-live="polite"></div>
+    <div class="seg view-toggle" role="tablist" aria-label="Ansicht">
+      <button data-view="list" class="active">☰ Liste</button>
+      <button data-view="map">🗺️ Karte</button>
+    </div>
     <ol id="list" class="list"></ol>
+    <div id="map" class="map" hidden></div>
   </main>
 
   <footer>
@@ -83,6 +89,7 @@
     </form>
   </dialog>
 
+  <script src="vendor/leaflet/leaflet.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

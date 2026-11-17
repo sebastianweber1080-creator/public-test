@@ -55,3 +55,23 @@ dialog label { display: grid; gap: 4px; font-size: .9rem; }
 dialog menu { display: flex; justify-content: flex-end; gap: 8px; margin: 0; padding: 0; }
 .hint { font-size: .8rem; color: var(--muted); margin: 0; }
 dialog::backdrop { background: rgb(0 0 0 / .4); }
+
+/* ---------- Ansicht-Umschalter & Karte ---------- */
+.view-toggle { grid-template-columns: 1fr 1fr; margin-bottom: 10px; background: var(--card); }
+[hidden] { display: none !important; }
+.map { height: calc(100dvh - 330px); min-height: 360px; border-radius: 12px; border: 1px solid var(--line); z-index: 0; }
+button.link { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; font-size: inherit; }
+.pin { position: absolute; transform: translate(-50%, -100%); margin-top: -6px; white-space: nowrap;
+       padding: 3px 7px; border-radius: 8px; color: #fff; font-weight: 700; font-size: 14px;
+       font-variant-numeric: tabular-nums; box-shadow: 0 1px 4px rgb(0 0 0 / .35); background: #15803d; }
+.pin::after { content: ""; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
+              border: 6px solid transparent; border-bottom: 0; border-top-color: inherit; }
+.pin sup { font-size: .65em; }
+.pin.cheap { background: #15803d; border-color: #15803d; }
+.pin.mid { background: #b45309; border-color: #b45309; }
+.pin.exp { background: #b91c1c; border-color: #b91c1c; }
+.pin.na, .pin.closed { background: #6b7280; border-color: #6b7280; }
+.popup table { margin: 6px 0; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.popup td { padding: 1px 10px 1px 0; }
+.popup tr.sel { font-weight: 700; }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--card); color: var(--text); }
