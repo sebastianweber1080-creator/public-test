@@ -1,0 +1,57 @@
+:root {
+  --bg: #f4f6f8; --card: #fff; --text: #111827; --muted: #6b7280; --line: #e5e7eb;
+  --accent: #0f766e; --cheap: #15803d; --mid: #b45309; --exp: #b91c1c;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0b1120; --card: #111827; --text: #f3f4f6; --muted: #9ca3af; --line: #1f2937;
+          --accent: #2dd4bf; --cheap: #4ade80; --mid: #fbbf24; --exp: #f87171; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+       background: var(--bg); color: var(--text); }
+a { color: var(--accent); }
+.topbar { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between;
+          padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top));
+          background: var(--accent); color: #fff; }
+.topbar h1 { font-size: 1.2rem; margin: 0; }
+.icon-btn { background: none; border: 0; font-size: 1.4rem; cursor: pointer; }
+main { max-width: 720px; margin: 0 auto; padding: 12px 16px 24px; }
+.controls { display: grid; gap: 10px; background: var(--card); padding: 12px; border-radius: 12px;
+            border: 1px solid var(--line); }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--accent); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; padding: 10px 4px; background: transparent; color: var(--text); font: inherit; cursor: pointer; }
+.seg button.active { background: var(--accent); color: #fff; font-weight: 600; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.row label { display: flex; flex-direction: column; font-size: .8rem; color: var(--muted); }
+.row label.check { flex-direction: row; gap: 6px; align-items: center; font-size: .95rem; color: var(--text); }
+select, input[type=search], input[type=text], button { font: inherit; padding: 8px 10px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--text); }
+#place { flex: 1 1 160px; min-width: 0; }
+button { cursor: pointer; }
+button.primary, #searchForm button[type=submit] { background: var(--accent); color: #fff; border-color: var(--accent); }
+.status { margin: 12px 2px; color: var(--muted); font-size: .9rem; min-height: 1.2em; }
+.status.error { color: var(--exp); }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.station { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; background: var(--card);
+           border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.station.closed { opacity: .55; }
+.station .name { font-weight: 600; }
+.station .addr, .station .meta { color: var(--muted); font-size: .85rem; }
+.station .price { grid-row: 1 / span 2; grid-column: 2; align-self: center; text-align: right;
+                  font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.price sup { font-size: .6em; }
+.price.cheap { color: var(--cheap); } .price.mid { color: var(--mid); } .price.exp { color: var(--exp); }
+.price.na { color: var(--muted); font-size: 1rem; }
+.station .others { grid-column: 1 / -1; display: flex; gap: 12px; font-size: .8rem; color: var(--muted); }
+.station .actions { grid-column: 1 / -1; display: flex; gap: 12px; font-size: .85rem; }
+.badge { display: inline-block; font-size: .7rem; padding: 1px 6px; border-radius: 6px; margin-left: 6px;
+         background: var(--line); color: var(--muted); vertical-align: middle; }
+.badge.open { background: color-mix(in srgb, var(--cheap) 20%, transparent); color: var(--cheap); }
+footer { text-align: center; font-size: .75rem; color: var(--muted); padding: 16px; }
+dialog { border: 0; border-radius: 14px; padding: 0; max-width: min(92vw, 480px); background: var(--card); color: var(--text); }
+dialog form { padding: 18px; display: grid; gap: 12px; }
+dialog h2 { margin: 0; }
+dialog label { display: grid; gap: 4px; font-size: .9rem; }
+dialog menu { display: flex; justify-content: flex-end; gap: 8px; margin: 0; padding: 0; }
+.hint { font-size: .8rem; color: var(--muted); margin: 0; }
+dialog::backdrop { background: rgb(0 0 0 / .4); }

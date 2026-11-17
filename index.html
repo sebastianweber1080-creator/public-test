@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Spritpreise in der Nähe</title>
+  <meta name="theme-color" content="#0f766e">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>⛽ Spritpreise</h1>
+    <button id="settingsBtn" class="icon-btn" aria-label="Einstellungen">⚙️</button>
+  </header>
+
+  <main>
+    <section class="controls">
+      <div class="seg" role="radiogroup" aria-label="Kraftstoff">
+        <button data-fuel="e5" class="active">Super E5</button>
+        <button data-fuel="e10">Super E10</button>
+        <button data-fuel="diesel">Diesel</button>
+      </div>
+
+      <div class="row">
+        <label>Umkreis
+          <select id="radius">
+            <option value="2">2 km</option>
+            <option value="5" selected>5 km</option>
+            <option value="10">10 km</option>
+            <option value="15">15 km</option>
+            <option value="25">25 km</option>
+          </select>
+        </label>
+        <label>Sortierung
+          <select id="sort">
+            <option value="price" selected>Preis</option>
+            <option value="dist">Entfernung</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="openOnly" checked> nur geöffnet</label>
+      </div>
+
+      <form id="searchForm" class="row">
+        <input id="place" type="search" placeholder="Ort oder PLZ (optional)" autocomplete="postal-code">
+        <button type="submit">Suchen</button>
+        <button type="button" id="locateBtn" title="Aktuellen Standort verwenden">📍 Standort</button>
+      </form>
+    </section>
+
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+    <ol id="list" class="list"></ol>
+  </main>
+
+  <footer>
+    Daten: <a href="https://creativecommons.tankerkoenig.de" target="_blank" rel="noopener">Tankerkönig</a>
+    / MTS-K (CC BY 4.0) · Geocoding: © OpenStreetMap
+  </footer>
+
+  <dialog id="settings">
+    <form method="dialog">
+      <h2>Einstellungen</h2>
+      <p>Die App nutzt die kostenlose Tankerkönig-API (Daten der Markttransparenzstelle für Kraftstoffe).
+        Hol dir einen eigenen API-Key unter
+        <a href="https://onboarding.tankerkoenig.de" target="_blank" rel="noopener">onboarding.tankerkoenig.de</a>.</p>
+      <label>API-Key
+        <input id="apiKey" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" spellcheck="false" autocomplete="off">
+      </label>
+      <label>Automatisch aktualisieren
+        <select id="refresh">
+          <option value="0">aus</option>
+          <option value="5" selected>alle 5 Minuten</option>
+          <option value="10">alle 10 Minuten</option>
+        </select>
+      </label>
+      <p class="hint">Der Key wird nur lokal in deinem Browser gespeichert.</p>
+      <menu>
+        <button value="cancel">Abbrechen</button>
+        <button value="save" id="saveSettings" class="primary">Speichern</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
