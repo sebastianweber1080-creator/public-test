@@ -23,7 +23,8 @@ Reine statische Dateien, kein Build nötig:
 ```bash
 python3 -m http.server 8000   # dann http://localhost:8000 öffnen
 ```
-Für GPS auf dem Handy muss die Seite über **HTTPS** laufen – am einfachsten über GitHub Pages
+Für GPS auf dem Handy muss die Seite über **HTTPS** laufen – am einfachsten über GitHub Pages:
+https://sebastianweber1080-creator.github.io/public-test/
 (Settings → Pages → Branch auswählen).
 
 ## Hinweise
